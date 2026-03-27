@@ -6,9 +6,16 @@ from tasks.research_tasks import research_task
 from tasks.writing_tasks import writing_task, rewrite_task
 from tasks.editing_tasks import editing_task
 
-MAX_RETRIES = 3
+MAX_RETRIES = 1
 
-def run_pipeline(source_text=None):
+
+def log(msg, log_callback):
+    if log_callback:
+        log_callback(msg)
+    print(msg)
+
+
+def run_pipeline(source_text=None, log_callback=None):
     print("\n" + "="*60)
     print("CONTENTFLOW AI — PIPELINE STARTING")
     print("="*60)
@@ -19,7 +26,12 @@ def run_pipeline(source_text=None):
     editor = create_editor()
 
     #  Research 
-    task1 = research_task(researcher)
+    if source_text is None:
+        from tasks.research_tasks import SOURCE_TEXT
+        source_text = SOURCE_TEXT
+
+    task1 = research_task(researcher, source_text)
+    log("🔍 Research started", log_callback)
     research_crew = Crew(
         agents=[researcher],
         tasks=[task1],
@@ -27,8 +39,8 @@ def run_pipeline(source_text=None):
         verbose=True
     )
     research_result = research_crew.kickoff()
-    print("\n✅ RESEARCHER DONE\n")
-
+    log("✅ Research completed", log_callback)
+    log("✍️ Writing started", log_callback)
     # Write + Edit loop
     current_writing_task = writing_task(writer, context_tasks=[task1])
     correction_note = None
@@ -36,7 +48,7 @@ def run_pipeline(source_text=None):
 
     for attempt in range(1, MAX_RETRIES + 1):
         print(f"\n{'='*60}")
-        print(f" WRITING ATTEMPT {attempt}/{MAX_RETRIES}")
+        log(f"✍️ Writing attempt {attempt}", log_callback)
         print("="*60)
 
         # If retry, rewrite task with correction note
@@ -56,9 +68,10 @@ def run_pipeline(source_text=None):
         )
         writing_result = writing_crew.kickoff()
 
-        print(f"\n✅ WRITER DONE (attempt {attempt})\n")
+        log("✅ Writing completed", log_callback)
 
         # Run editor
+        log("🧠 Editing started", log_callback)
         edit_task = editing_task(editor, context_tasks=[task1, current_writing_task])
         editing_crew = Crew(
             agents=[editor],
@@ -69,7 +82,7 @@ def run_pipeline(source_text=None):
         edit_result = editing_crew.kickoff()
 
         edit_text = str(edit_result)
-        print(f"\n✅ EDITOR DONE (attempt {attempt})\n")
+        log("✅ Editing completed", log_callback)
 
         # Check if everything is approved
         all_approved = (
@@ -79,21 +92,20 @@ def run_pipeline(source_text=None):
         )
 
         if all_approved:
-            print(f"\n🎉 ALL CONTENT APPROVED on attempt {attempt}!")
+            log("🎉 All content approved!", log_callback)
             final_result = writing_result
             break
         else:
             # Extract correction note for next iteration
             correction_note = extract_correction_note(edit_text)
-            print(f"\n🔄 EDITOR REJECTED — sending correction note to Writer...")
+            log("❌ Editor rejected content — retrying...", log_callback)
             print(f"Correction: {correction_note}\n")
 
             if attempt == MAX_RETRIES:
                 print(f"\n⚠️  Max retries ({MAX_RETRIES}) reached. Using last draft.")
                 final_result = writing_result
-
+    log("🚀 Pipeline finished", log_callback)
     return final_result, edit_result
-
 
 def extract_correction_note(edit_text):
     """Pull out correction notes from the editor's response."""

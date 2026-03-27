@@ -10,12 +10,12 @@ Value prop: Cut data engineering costs by 60%, ship 3x faster.
 Launch: April 15, 2026. SOC2 certified.
 """
 
-def research_task(agent):
+def research_task(agent,  source_text):
     return Task(
         description=f"""Analyze this source material and extract a structured fact sheet:
 
         Source:
-        {SOURCE_TEXT}
+        {source_text}
 
         Extract: product name, key features, pricing, target audience,
         value proposition, technical specs. Flag any ambiguous statements.""",
