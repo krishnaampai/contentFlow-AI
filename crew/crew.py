@@ -7,7 +7,7 @@ from agents.researcher import create_researcher
 from agents.writer import create_writer
 from agents.editor import create_editor
 from tasks.research_tasks import research_task
-from tasks.writing_tasks import writing_task, rewrite_task
+from tasks.writing_tasks import writing_task, rewrite_task, regenerate_single_task
 from tasks.editing_tasks import editing_task
 
 MAX_RETRIES = 1
@@ -130,6 +130,46 @@ def run_pipeline(source_text=None, log_callback=None):
         log("🚀 Pipeline finished", log_callback)
         return str(final_result.raw), str(edit_result.raw)
 
+    finally:
+        if log_callback:
+            sys.stdout = old_stdout
+
+def regenerate_piece(content_type: str, source_text: str, log_callback=None):
+    """
+    Re-run ONLY the researcher + writer for a single content piece.
+    content_type: 'blog' | 'social' | 'email'
+    Returns the new raw text for that piece (just the labelled section).
+    """
+    if log_callback:
+        old_stdout = sys.stdout
+        sys.stdout = StreamToCallback(log_callback)
+    try:
+        log(f"🔍 Re-researching for {content_type} regeneration…", log_callback)
+        researcher = create_researcher()
+        writer = create_writer()
+ 
+        task1 = research_task(researcher, source_text)
+        research_crew = Crew(
+            agents=[researcher],
+            tasks=[task1],
+            process=Process.sequential,
+            verbose=True,
+        )
+        research_crew.kickoff()
+        log("✅ Research done", log_callback)
+ 
+        log(f"✍️ Writing new {content_type}…", log_callback)
+        regen_task = regenerate_single_task(writer, content_type, context_tasks=[task1])
+        writing_crew = Crew(
+            agents=[writer],
+            tasks=[regen_task],
+            process=Process.sequential,
+            verbose=True,
+        )
+        result = writing_crew.kickoff()
+        log(f"✅ {content_type.capitalize()} regenerated", log_callback)
+        return str(result.raw)
+ 
     finally:
         if log_callback:
             sys.stdout = old_stdout
