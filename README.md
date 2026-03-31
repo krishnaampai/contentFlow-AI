@@ -98,7 +98,6 @@ CONTENTFLOW-AI/
 * Editor-driven regeneration loop for individual pieces
 * Persistent storage (DB integration)
 * Authentication and user dashboards
-* Scalable backend deployment
 
 ---
 
