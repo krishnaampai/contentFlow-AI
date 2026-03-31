@@ -46,9 +46,7 @@ This pipeline ensures content is not just generated, but iteratively improved fo
 ## 📁 Project Structure
 
 ```bash
-## 📁 Project Structure
 
-```bash
 CONTENTFLOW-AI/
 ├── app.py                  # Main Streamlit UI
 ├── run.py                  # Entry script (optional runner)
