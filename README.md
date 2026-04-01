@@ -1,117 +1,135 @@
-
-#  ContentFlow AI
-
-ContentFlow AI is a multi-agent content generation platform that automates the creation of high-quality marketing content using AI. It orchestrates specialized agents to research, generate, and refine content in a structured pipeline.
+# ContentFlow AI
 
 ---
 
-##  Overview
+##  The Problem
 
-ContentFlow AI is built around three coordinated agents:
-
-* **Researcher** — gathers and structures relevant context
-* **Writer** — generates content across multiple formats
-* **Editor** — reviews outputs and provides feedback
-
-This pipeline ensures content is not just generated, but iteratively improved for quality and consistency.
+Creating high-quality marketing content across multiple formats (blogs, social media, emails) is time-consuming and often inconsistent. Most tools generate content in isolation without ensuring coherence, accuracy, or iterative improvement.
 
 ---
 
-##  Features
+##  The Solution
 
-* Multi-agent pipeline (**Researcher → Writer → Editor**)
-* Generate multiple content formats in one run:
-
-  *  Blog post
-  *  Social media thread
-  *  Email teaser
-* Per-content controls:
-
-  * ✅ Accept / Undo
-  * 🔄 Regenerate individual pieces
-* Feedback-driven retry loop
-*  Real-time agent logs
-*  Responsive preview (mobile + desktop)
-*  Export all content as ZIP
----
-
-## 🛠️ Tech Stack
-
-* **Frontend:** Streamlit
-* **AI Orchestration:** CrewAI
-* **Core Logic:** Python (threading, regex parsing, HTML rendering)
+ContentFlow AI is a multi-agent content generation system that automates the entire content pipeline. It uses specialized AI agents — a **Researcher**, **Writer**, and **Editor** — to collaboratively generate, refine, and validate content. The system produces multiple formats in one run and supports feedback-driven improvements, ensuring high-quality and consistent outputs.
 
 ---
 
-## 📁 Project Structure
+##  Tech Stack
+
+**Programming Languages**
+
+* Python
+* JavaScript
+
+**Frameworks & Libraries**
+
+* FastAPI (backend API)
+* React + Vite (frontend)
+* Tailwind CSS (styling)
+* CrewAI (multi-agent orchestration)
+
+**Tools & APIs**
+
+* Gemini API (LLM)
+* JSZip (export functionality)
+
+---
+
+##  Setup Instructions
+
+### 1️⃣ Clone the repository
 
 ```bash
-
-CONTENTFLOW-AI/
-├── app.py                  # Main Streamlit UI
-├── run.py                  # Entry script (optional runner)
-├── .env                    # Environment variables
-├── .gitignore
-├── README.md
-├── venv/                   # Virtual environment (ignored)
-│
-├── crew/
-│   └── crew.py             # Agent definitions + pipeline logic
-│
-├── tasks/
-│   ├── __init__.py
-│   ├── research_tasks.py   # Research agent tasks
-│   ├── writing_tasks.py    # Writer agent tasks
-│   ├── editing_tasks.py    # Editor agent tasks
-│
-├── tools/                  # (Optional utilities for agents)
-│
-├── ui/
-│   └── renderers.py        # UI rendering + previews
-│
-└── utils/
-    ├── content.py          # Content parsing logic
-    ├── export.py           # ZIP export functionality
-    └── pipeline.py         # Threading + pipeline orchestration
+git clone https://github.com/krishnaampai/contentFlow-AI
+cd contentFlow-AI
 ```
 
 ---
 
-## ⚙️ How It Works
+### 2️⃣ Backend Setup (FastAPI)
 
-1. User provides input (currently text)
-2. **Researcher** processes and structures information
-3. **Writer** generates:
+```bash
+cd backend
+pip install -r requirements.txt
+```
 
-   * Blog post
-   * Social thread
-   * Email teaser
-4. **Editor** reviews and suggests improvements
-5. System retries generation using feedback (if needed)
-6. User can accept, regenerate, or export content
+---
+
+### 3️⃣ Add Environment Variables
+
+Create a `.env` file in the backend folder:
+
+```env
+GEMINI_API_KEY=your_gemini_api_key_here
+```
+
+👉 Replace with your actual Gemini API key.
+
+---
+
+### 4️⃣ Run Backend Server
+
+```bash
+uvicorn main:app --reload
+```
+
+Server will run on:
+
+```
+http://localhost:8000
+```
+
+---
+
+### 5️⃣ Frontend Setup (React + Vite)
+
+```bash
+cd frontend
+npm install
+```
+
+---
+
+### 6️⃣ Run Frontend
+
+```bash
+npm run dev
+```
+
+Frontend runs on:
+
+```
+http://localhost:5173
+```
+
+---
+
+##  How to Use
+
+1. Enter project details or content input
+2. Click **Generate Content**
+3. View:
+
+   * Agent Logs
+   * Generated Content (Blog, Social, Email)
+   * Review section (side-by-side comparison)
+4. Accept, regenerate, or export content
+
+---
+
+##  Key Features
+
+* Multi-agent pipeline (**Researcher → Writer → Editor**)
+* Generates blog, social thread, and email simultaneously
+* Accept / Undo and Regenerate per section
+* Side-by-side review comparison
+* Export content as ZIP
 
 ---
 
 ##  Future Improvements
 
-* Support for file inputs (PDF, DOCX) and URLs
-* Editor-driven regeneration loop for individual pieces
-* Persistent storage (DB integration)
+* File & URL input support
+* Live streaming agent logs
+* Database integration for history
 * Authentication and user dashboards
-
----
-
-##  Getting Started
-
-```bash
-# Clone the repo
-git clone <your-repo-url>
-
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the app
-streamlit run app.py
-```
-
----
