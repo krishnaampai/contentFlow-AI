@@ -1,11 +1,12 @@
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
 import AnimatedTabs from "./components/AnimatedTabs"
-import { generateContent } from "./lib/api"
+import { streamContent } from "./lib/api"
 import { useState } from "react"
 import LogsTab from "./components/LogsTab"
 import ContentTab from "./components/ContentTab"
 import ReviewTab from "./components/ReviewTab"
+import dummyLogTxt from "./lib/dummyLogs.txt?raw"
 
 export default function App() {
 
@@ -15,29 +16,63 @@ export default function App() {
   const [output, setOutput] = useState("")
   const [review, setReview] = useState("")
   const [activeTab, setActiveTab] = useState("logs")
+  const [currentStep, setCurrentStep] = useState("")
 
 
-  const handleGenerate = async () => {
-    if (!input.trim()) return
+  // 
+  
+  // const handleGenerate = async () => {
+  //   if (!input.trim()) return
 
-    setLoading(true)
+  //   setLoading(true)
 
-    try {
-      const data = await generateContent(input)
+  //   try {
+  //     const data = await generateContent(input)
 
-      setLogs(data.logs)
+  //     setLogs(data.logs)
            
 
-      setOutput(data.output)
-      setReview(data.review)
+  //     setOutput(data.output)
+  //     setReview(data.review)
 
-      console.log("SUCCESS:", data)
-    } catch (err) {
-      console.error("ERROR:", err)
+  //     console.log("SUCCESS:", data)
+  //   } catch (err) {
+  //     console.error("ERROR:", err)
+  //   }
+
+  //   setLoading(false)
+  // }
+const handleGenerate = () => {
+  if (!input.trim()) return
+
+  setLoading(true)
+  setActiveTab("logs")
+  setLogs("")
+  setOutput("")
+  setReview("")
+
+  streamContent(input, {
+    onLog: (log) => {
+      setLogs(prev => prev + (prev ? "\n" : "") + log)
+    },
+
+    onOutput: (out) => {
+      setOutput(prev => prev + "\n" + out)
+    },
+
+    onReview: (rev) => {
+      setReview(prev => prev + "\n" + rev)
+    },
+
+    onDone: () => {
+      setLoading(false)
+    },
+
+    onError: () => {
+      setLoading(false)
     }
-
-    setLoading(false)
-  }
+  })
+}
 //   const handleGenerate = async () => {
 //   setLoading(true)
 
@@ -74,17 +109,19 @@ export default function App() {
 // }
 
   return (
-    <div className="min-h-screen relative overflow-hidden text-[#3b2f2f] px-10 py-10">
+    <div className="min-h-screen relative overflow-x-hidden text-[#3b2f2f] px-10 py-10">
 
-      {/* 🔥 BACKGROUND LAYERS */}
       
       {/* Base gradient */}
       <div className="absolute inset-0 z-0 bg-linear-to-br from-[#fff7ed] via-[#fde2e4] to-[#fef3c7]" />
 
       {/* Soft red/orange glow blobs */}
-      <div className="absolute -top-25 -left-25 w-100 h-100 bg-[#7f1d1d] opacity-20 blur-[120px] rounded-full z-0" />
+      <div className="fixed inset-0 -z-10">
+        <div className="absolute -top-25 -left-25 w-100 h-100 bg-[#7f1d1d] opacity-20 blur-[120px] rounded-full z-0" />
       <div className="absolute -bottom-25 -right-25 w-100 h-100 bg-[#dc2626] opacity-20 blur-[120px] rounded-full z-0" />
       <div className="absolute top-[40%] left-[50%] w-75 h-75 bg-[#ea580c] opacity-20 blur-[100px] rounded-full z-0" />
+      </div>
+      
 
       {/* CONTENT */}
       <div className="relative z-10 max-w-6xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-16 items-center">
@@ -145,9 +182,9 @@ export default function App() {
         {/* TAB CONTENT */}
         <div className="w-full mt-8">
 
-          {activeTab === "logs" && <LogsTab logs={logs}  /> }
+          {activeTab === "logs" && <LogsTab logs={logs} output={output} /> }
           {activeTab === "content" && (
-            <ContentTab output={output} />
+            <ContentTab output={output} input = {input} />
           )}
 
           {activeTab === "review" && (

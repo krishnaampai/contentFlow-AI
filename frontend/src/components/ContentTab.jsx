@@ -2,17 +2,21 @@ import { useState } from "react"
 import JSZip from "jszip"
 import { Button } from "@/components/ui/button"
 import ReactMarkdown from "react-markdown"
+import ViewToggle from "./ViewToggle"
+import BlogPreview from "./BlogPreview"
+import SocialPreview from "./SocialPreview"
+import EmailPreview from "./EmailPreview"
 
-export default function ContentTab({ output }) {
-
+export default function ContentTab({ output, input }) {
   const [accepted, setAccepted] = useState({
     blog: false,
     social: false,
     email: false,
   })
+  const [compareData, setCompareData] = useState(null)
 
   // --- parse content ---
- const parseContent = (text) => {
+  const parseContent = (text) => {
     const sections = {
       blog: "",
       social: "",
@@ -29,7 +33,7 @@ export default function ContentTab({ output }) {
 
     return sections
   }
-const { blog, social, email } = parseContent(output || "")
+  const { blog, social, email } = parseContent(output || "")
 
   // --- scroll helper ---
   const scrollTo = (id) => {
@@ -54,7 +58,7 @@ const { blog, social, email } = parseContent(output || "")
     <div className="max-w-5xl mx-auto mt-10 space-y-8">
 
       {/* 🔥 TOP MENU */}
-      <div className="sticky top-4 z-20 flex justify-between items-center 
+      <div className="sticky top-0 z-50 flex justify-between items-center 
       bg-white/60 backdrop-blur-xl border border-white/40 rounded-xl px-4 py-2 shadow-sm">
 
         {/* LEFT NAV */}
@@ -101,6 +105,8 @@ const { blog, social, email } = parseContent(output || "")
         content={blog}
         accepted={accepted.blog}
         onAccept={() => setAccepted({ ...accepted, blog: !accepted.blog })}
+        input={input}
+        onCompare={() => setCompareData({ input, content: blog })}
       />
 
       {/* SOCIAL */}
@@ -110,6 +116,8 @@ const { blog, social, email } = parseContent(output || "")
         content={social}
         accepted={accepted.social}
         onAccept={() => setAccepted({ ...accepted, social: !accepted.social })}
+         input={input}
+         onCompare={() => setCompareData({ input, content: social  })}
       />
 
       {/* EMAIL */}
@@ -119,14 +127,54 @@ const { blog, social, email } = parseContent(output || "")
         content={email}
         accepted={accepted.email}
         onAccept={() => setAccepted({ ...accepted, email: !accepted.email })}
+        input={input}
+        onCompare={() => setCompareData({ input, content: email })}
       />
+
+      {compareData && (
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+
+          <div
+            className="absolute inset-0 bg-black/40 backdrop-blur-md"
+            onClick={() => setCompareData(null)}
+          />
+
+          <div className="relative w-[95%] max-w-7xl h-[90vh] bg-white rounded-2xl shadow-2xl flex flex-col overflow-hidden">
+
+            <div className="flex justify-between items-center px-6 py-4 border-b">
+              <h2 className="text-lg font-semibold">Compare Content</h2>
+              <button onClick={() => setCompareData(null)}>✕</button>
+            </div>
+
+            <div className="grid md:grid-cols-2 gap-6 flex-1 overflow-hidden p-6">
+
+              <div className="overflow-y-auto border rounded-xl p-4 bg-gray-50">
+                <h4 className="text-sm font-semibold mb-3 text-gray-500">Original</h4>
+                <p className="text-sm whitespace-pre-line">
+                  {compareData.input}
+                </p>
+              </div>
+
+              <div className="overflow-y-auto border rounded-xl p-4">
+                <h4 className="text-sm font-semibold mb-3 text-gray-500">Generated</h4>
+                <ReactMarkdown>{compareData.content}</ReactMarkdown>
+              </div>
+
+            </div>
+
+          </div>
+
+        </div>
+      )}
 
     </div>
   )
 }
 
 // 🔹 Reusable section
-function Section({ id, title, content, accepted, onAccept }) {
+function Section({ id, title, content, accepted, onAccept , input, onCompare}) {
+  const [view, setView] = useState("desktop")
+  const [showCompare, setShowCompare] = useState(false)
   return (
     <div id={id} className="bg-white/70 backdrop-blur-xl border rounded-xl p-5 space-y-4">
 
@@ -141,12 +189,28 @@ function Section({ id, title, content, accepted, onAccept }) {
         )}
       </div>
 
+      <div className="flex gap-2">
+        <div className="flex items-center gap-2 text-xs text-[#5b3a3a]">
+          <span>Mobile</span>
+          <ViewToggle view={view} setView={setView} />
+          <span>Desktop</span>
+        </div>
+      </div>
+
       {/* CONTENT */}
-      <div className="prose prose-sm max-w-none text-[#3b2f2f]">
-  <ReactMarkdown>
-    {content}
-  </ReactMarkdown>
-</div>
+      <div className="flex justify-center">
+        {title.trim().toLowerCase() === "blog" && (
+          <BlogPreview content={content} view={view} />
+        )}
+
+        {title.trim().toLowerCase() === "social" && (
+          <SocialPreview content={content} view={view} />
+        )}
+
+        {title.trim().toLowerCase() === "email" && (
+          <EmailPreview content={content} view={view} />
+        )}
+      </div>
 
       {/* ACTIONS */}
       <div className="flex gap-3">
@@ -162,6 +226,12 @@ function Section({ id, title, content, accepted, onAccept }) {
           className="bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
         >
           Regenerate
+        </Button>
+        <Button
+          className="bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
+          onClick={onCompare}
+        >
+          Compare
         </Button>
 
       </div>

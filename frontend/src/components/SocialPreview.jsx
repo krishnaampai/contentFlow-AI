@@ -1,36 +1,25 @@
-export default function SocialPreview({ content }) {
-  const tweets = (content || "").split("\n\n").filter(Boolean)
+export default function SocialPreview({ content, view }) {
+  
+  const posts = content.split(/\*\*Post \d+:\*\*/i).filter(Boolean)
 
   return (
-    <div style={{ display: "flex", flexDirection: "column", gap: "8px", maxWidth: "480px" }}>
-      {tweets.map((t, i) => (
-        <div
-          key={i}
-          style={{
-            background: "var(--color-background-primary)",
-            border: "0.5px solid var(--color-border-tertiary)",
-            borderRadius: "var(--border-radius-lg)",
-            padding: "12px 14px",
-            display: "flex",
-            gap: "10px",
-            alignItems: "flex-start",
-          }}
-        >
-          <span
-            style={{
-              fontSize: "11px",
-              fontWeight: "500",
-              color: "var(--color-text-tertiary)",
-              fontFamily: "var(--font-mono)",
-              minWidth: "18px",
-              paddingTop: "2px",
-            }}
-          >
-            {i + 1}
-          </span>
-          <p style={{ margin: 0, fontSize: "14px", lineHeight: "1.6", color: "var(--color-text-primary)" }}>
-            {t}
+    <div className={`space-y-4 ${view === "mobile" ? "max-w-93.75 mx-auto" : ""}`}>
+      {posts.map((post, i) => (
+        <div key={i} className="bg-white p-4 rounded-xl shadow border">
+          <div className="flex items-center gap-2 mb-2">
+            <div className="w-8 h-8 bg-gray-300 rounded-full"></div>
+            <div className="text-sm font-medium">ContentFlow AI</div>
+          </div>
+
+          <p className="text-sm text-gray-800 whitespace-pre-line">
+            {post.trim()}
           </p>
+
+          <div className="flex gap-4 text-xs text-gray-500 mt-3">
+            <span>Like</span>
+            <span>Comment</span>
+            <span>Share</span>
+          </div>
         </div>
       ))}
     </div>
