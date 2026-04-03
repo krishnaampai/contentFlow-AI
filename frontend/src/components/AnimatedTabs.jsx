@@ -1,9 +1,9 @@
 import { motion } from "framer-motion"
 import { useState } from "react"
 const tabs = [
-  { id: "logs", label: "Agent Logs" },
-  { id: "content", label: "Content" },
-  { id: "review", label: "Review" },
+  { id: "blog", label: "Blog" },
+  { id: "social", label: "Social" },
+  { id: "email", label: "Email" },
 ]
 
 export default function AnimatedTabs({ activeTab, setActiveTab }) {
@@ -13,14 +13,17 @@ export default function AnimatedTabs({ activeTab, setActiveTab }) {
       {tabs.map((tab) => (
         <button
           key={tab.id}
-          onClick={() => setActiveTab(tab.id)}
+          onClick={() => {
+            setActiveTab(tab.id)
+            document.getElementById(tab.id)?.scrollIntoView({ behavior: "smooth" })
+          }}
           className="relative px-4 py-1.5 text-sm font-medium rounded-full text-[#5b3a3a]"
           style={{ WebkitTapHighlightColor: "transparent" }}
         >
           {activeTab === tab.id && (
             <motion.span
               layoutId="bubble"
-              className="absolute inset-0 bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] z-0"
+              className="absolute inset-0 bg-linear-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] z-0"
               style={{ borderRadius: 9999 }}
               transition={{ type: "spring", bounce: 0.2, duration: 0.5 }}
             />

@@ -1,6 +1,7 @@
 from crewai import Task
 
-SOURCE_TEXT = """
+#For testing
+MOCK_DATA = """
 Product: DataSync Pro 3.0
 AI-powered data integration platform.
 Features: real-time sync, 200+ connectors, 99.7% accuracy.

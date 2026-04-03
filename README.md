@@ -50,6 +50,15 @@ cd contentFlow-AI
 
 ```bash
 cd backend
+python -m venv venv
+
+# Activate it
+# Windows
+venv\Scripts\activate
+
+# macOS/Linux
+source venv/bin/activate
+
 pip install -r requirements.txt
 ```
 
@@ -57,13 +66,21 @@ pip install -r requirements.txt
 
 ### 3️⃣ Add Environment Variables
 
-Create a `.env` file in the backend folder:
+Create a `.env` file in the root directory:
 
 ```env
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
 👉 Replace with your actual Gemini API key.
+
+Frontend (.env)
+
+Create a .env file inside the frontend folder:
+
+```env
+VITE_API_URL=your_vite_url
+```
 
 ---
 
@@ -112,7 +129,7 @@ http://localhost:5173
 
    * Agent Logs
    * Generated Content (Blog, Social, Email)
-   * Review section (side-by-side comparison)
+   * Compare section (side-by-side comparison)
 4. Accept, regenerate, or export content
 
 ---
@@ -124,12 +141,11 @@ http://localhost:5173
 * Accept / Undo and Regenerate per section
 * Side-by-side review comparison
 * Export content as ZIP
+* Live streaming agent logs
 
 ---
 
 ##  Future Improvements
 
 * File & URL input support
-* Live streaming agent logs
-* Database integration for history
-* Authentication and user dashboards
+

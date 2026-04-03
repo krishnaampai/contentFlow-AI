@@ -3,7 +3,7 @@ import queue
 import threading
 
 from crew.crew import run_pipeline, regenerate_piece
-from utils.content import decode_markdown, extract_single_piece
+from utils.content import decode_markdown
 
 # Module-level queue shared between all threads and the UI polling loop
 log_queue: queue.Queue = queue.Queue()

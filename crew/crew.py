@@ -10,7 +10,7 @@ from tasks.research_tasks import research_task
 from tasks.writing_tasks import writing_task, rewrite_task, regenerate_single_task
 from tasks.editing_tasks import editing_task
 
-MAX_RETRIES = 1
+MAX_RETRIES = 1 #For Testing
 
 
 def strip_ansi(text):

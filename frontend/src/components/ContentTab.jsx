@@ -6,16 +6,79 @@ import ViewToggle from "./ViewToggle"
 import BlogPreview from "./BlogPreview"
 import SocialPreview from "./SocialPreview"
 import EmailPreview from "./EmailPreview"
+import { regenerateContent } from "../lib/api"
+import AnimatedTabs from "./AnimatedTabs"
 
-export default function ContentTab({ output, input }) {
+export default function ContentTab({ output: initialOutput, input }) {
+
+  const [loading, setLoading] = useState(false)
+  const [logs, setLogs] = useState([])
+  const [output, setOutput] = useState(initialOutput || "")
+  const [regenBuffer, setRegenBuffer] = useState("")
+  const [activeTab, setActiveTab] = useState("blog")
+
+  const handleRegenerate = (type) => {
+    setLoading(true)
+    setLogs("")
+    setRegenBuffer("")
+
+    regenerateContent(input, type, {
+      onLog: (log) => {
+        console.log("LOG:", log)
+        setLogs(prev => prev + (prev ? "\n" : "") + log)
+      },
+
+      onOutput: (out) => {
+        console.log("OUTPUT:", out)
+        setRegenBuffer(prev => prev + "\n" + out)
+      },
+
+      onDone: () => {
+        setOutput(prev => {
+          if (!prev) return regenBuffer
+
+          if (type === "blog") {
+            return prev.replace(
+              /BLOG(?:\s+POST)?[:\n]+([\s\S]*?)(?=SOCIAL|EMAIL|$)/i,
+              `BLOG POST:\n${regenBuffer.trim()}\n`
+            )
+          }
+
+          if (type === "social") {
+            return prev.replace(
+              /SOCIAL(?:\s+(?:THREAD|MEDIA))?[:\n]+([\s\S]*?)(?=BLOG|EMAIL|$)/i,
+              `SOCIAL THREAD:\n${regenBuffer.trim()}\n`
+            )
+          }
+
+          if (type === "email") {
+            return prev.replace(
+              /EMAIL(?:\s+TEASER)?[:\n]+([\s\S]*?)(?=BLOG|SOCIAL|$)/i,
+              `EMAIL TEASER:\n${regenBuffer.trim()}\n`
+            )
+          }
+
+          return prev
+        })
+
+        setRegenBuffer("")
+        setLoading(false)
+      },
+
+      onError: () => {
+        setLoading(false)
+      }
+    })
+  }
+
   const [accepted, setAccepted] = useState({
     blog: false,
     social: false,
     email: false,
   })
   const [compareData, setCompareData] = useState(null)
+  console.log(input)
 
-  // --- parse content ---
   const parseContent = (text) => {
     const sections = {
       blog: "",
@@ -25,7 +88,7 @@ export default function ContentTab({ output, input }) {
 
     const blogMatch = text.match(/BLOG(?:\s+POST)?[:\n]+([\s\S]*?)(?=SOCIAL|EMAIL|$)/i)
     const socialMatch = text.match(/SOCIAL(?:\s+(?:THREAD|MEDIA))?[:\n]+([\s\S]*?)(?=BLOG|EMAIL|$)/i)
-    const emailMatch = text.match(/EMAIL(?:\s+NEWSLETTER)?[:\n]+([\s\S]*?)(?=BLOG|SOCIAL|$)/i)
+    const emailMatch = text.match(/EMAIL(?:\s+TEASER)?[:\n]+([\s\S]*?)(?=BLOG|SOCIAL|$)/i)
 
     sections.blog = blogMatch?.[1]?.trim() || ""
     sections.social = socialMatch?.[1]?.trim() || ""
@@ -35,12 +98,10 @@ export default function ContentTab({ output, input }) {
   }
   const { blog, social, email } = parseContent(output || "")
 
-  // --- scroll helper ---
   const scrollTo = (id) => {
     document.getElementById(id)?.scrollIntoView({ behavior: "smooth" })
   }
 
-  // --- zip export ---
   const exportZip = async () => {
     const zip = new JSZip()
     zip.file("blog.txt", blog)
@@ -55,50 +116,24 @@ export default function ContentTab({ output, input }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 space-y-8">
+    <div className="max-w-5xl mx-auto mt-10 space-y-8 px-6">
 
-      {/* 🔥 TOP MENU */}
-      <div className="sticky top-0 z-50 flex justify-between items-center 
-      bg-white/60 backdrop-blur-xl border border-white/40 rounded-xl px-4 py-2 shadow-sm">
+      {/* MENU */}<div className="sticky top-2 z-50">
+      <div className="max-w-5xl mx-auto flex justify-between items-center 
+  bg-white/60 backdrop-blur-sm rounded-xl px-4 py-2">
 
-        {/* LEFT NAV */}
-        <div className="flex gap-2">
+        <AnimatedTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
-          <button
-            onClick={() => scrollTo("blog")}
-            className="px-3 py-1 rounded-lg text-sm text-[#5b3a3a] hover:bg-white/50 z-10"
-          >
-            Blog
-          </button>
-
-          <button
-            onClick={() => scrollTo("social")}
-            className="px-3 py-1 rounded-lg text-sm text-[#5b3a3a] hover:bg-white/50"
-          >
-            Social
-          </button>
-
-          <button
-            onClick={() => scrollTo("email")}
-            className="px-3 py-1 rounded-lg text-sm text-[#5b3a3a] hover:bg-white/50"
-          >
-            Email
-          </button>
-
-        </div>
-
-        {/* EXPORT */}
         <button
           onClick={exportZip}
           className="px-4 py-1.5 text-sm rounded-lg text-white 
-          bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c]"
+          bg-linear-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] cursor-pointer"
         >
           Export ZIP
         </button>
-
       </div>
-
-      {/* BLOG */}
+      </div>
+      
       <Section
         id="blog"
         title="Blog"
@@ -107,20 +142,19 @@ export default function ContentTab({ output, input }) {
         onAccept={() => setAccepted({ ...accepted, blog: !accepted.blog })}
         input={input}
         onCompare={() => setCompareData({ input, content: blog })}
+        onRegenerate={() => handleRegenerate("blog")}
       />
 
-      {/* SOCIAL */}
       <Section
         id="social"
         title=" Social"
         content={social}
         accepted={accepted.social}
         onAccept={() => setAccepted({ ...accepted, social: !accepted.social })}
-         input={input}
-         onCompare={() => setCompareData({ input, content: social  })}
+        input={input}
+        onCompare={() => setCompareData({ input, content: social })}
+        onRegenerate={() => handleRegenerate("social")}
       />
-
-      {/* EMAIL */}
       <Section
         id="email"
         title=" Email"
@@ -129,7 +163,10 @@ export default function ContentTab({ output, input }) {
         onAccept={() => setAccepted({ ...accepted, email: !accepted.email })}
         input={input}
         onCompare={() => setCompareData({ input, content: email })}
+        onRegenerate={() => handleRegenerate("email")}
       />
+
+      
 
       {compareData && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center">
@@ -171,22 +208,44 @@ export default function ContentTab({ output, input }) {
   )
 }
 
-// 🔹 Reusable section
-function Section({ id, title, content, accepted, onAccept , input, onCompare}) {
+function Section({ id, title, content, accepted, onAccept, input, onCompare, onRegenerate }) {
   const [view, setView] = useState("desktop")
   const [showCompare, setShowCompare] = useState(false)
   return (
     <div id={id} className="bg-white/70 backdrop-blur-xl border rounded-xl p-5 space-y-4">
 
       {/* HEADER */}
-      <div className="flex justify-between items-center">
+      <div className="sticky top-16 z-40 flex justify-between items-center bg-white/60 backdrop-blur-sm px-2 py-2 rounded-lg">
         <h3 className="font-semibold text-[#4b2e2e]">{title}</h3>
 
-        {accepted && (
-          <span className="text-green-600 text-sm font-medium">
-            ✓ Accepted
-          </span>
-        )}
+        <div className="flex gap-2">
+
+          <Button
+            onClick={onAccept}
+            variant="outline"
+            className="flex items-center gap-2"
+          >
+            {accepted && (
+              <span className="text-green-600 text-sm">✓</span>
+            )}
+            {accepted ? "Accepted" : "Accept"}
+          </Button>
+
+          <Button
+            onClick={onRegenerate}
+            className="bg-linear-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
+          >
+            Regenerate
+          </Button>
+
+          <Button
+            className="bg-linear-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
+            onClick={onCompare}
+          >
+            Compare
+          </Button>
+
+        </div>
       </div>
 
       <div className="flex gap-2">
@@ -198,43 +257,25 @@ function Section({ id, title, content, accepted, onAccept , input, onCompare}) {
       </div>
 
       {/* CONTENT */}
-      <div className="flex justify-center">
-        {title.trim().toLowerCase() === "blog" && (
-          <BlogPreview content={content} view={view} />
-        )}
+      <div className="w-full">
+  <div className="mx-auto max-w-4xl">
+    {title.trim().toLowerCase() === "email" && (
+      <EmailPreview content={content} view={view} />
+    )}
 
-        {title.trim().toLowerCase() === "social" && (
-          <SocialPreview content={content} view={view} />
-        )}
 
-        {title.trim().toLowerCase() === "email" && (
-          <EmailPreview content={content} view={view} />
-        )}
-      </div>
+    {title.trim().toLowerCase() === "blog" && (
+      <BlogPreview content={content} view={view} />
+    )}
 
-      {/* ACTIONS */}
-      <div className="flex gap-3">
+    {title.trim().toLowerCase() === "social" && (
+      <SocialPreview content={content} view={view} />
+    )}
 
-        <Button
-          onClick={onAccept}
-          variant="outline"
-        >
-          {accepted ? "Undo" : "Accept"}
-        </Button>
+    
+  </div>
+</div>
 
-        <Button
-          className="bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
-        >
-          Regenerate
-        </Button>
-        <Button
-          className="bg-gradient-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
-          onClick={onCompare}
-        >
-          Compare
-        </Button>
-
-      </div>
     </div>
   )
 }
