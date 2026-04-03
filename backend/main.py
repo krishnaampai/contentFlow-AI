@@ -48,16 +48,25 @@ async def generate_stream_real(input: str):
 
             await asyncio.sleep(0.1)
 
-        output, review = await task
-        print("\n===== FINAL OUTPUT =====\n")
-        print(output)
+        try:
+            output, review = await task
 
-        for line in output.split("\n"):
-            yield f"data: OUTPUT::{line}\n\n"
-        for line in review.split("\n"):
-            yield f"data: REVIEW::{line}\n\n"
-        yield f"data: REVIEW::{review}\n\n"
-        yield f"data: DONE\n\n"
+            print("\n===== FINAL OUTPUT =====\n")
+            print(output)
+
+            for line in output.split("\n"):
+                yield f"data: OUTPUT::{line}\n\n"
+            for line in review.split("\n"):
+                yield f"data: REVIEW::{line}\n\n"
+
+            yield f"data: REVIEW::{review}\n\n"
+
+        except Exception as e:
+            print("ERROR:", str(e))
+            yield f"data: LOG::Error: {str(e)}\n\n"
+
+        finally:
+            yield f"data: DONE\n\n"
 
     return StreamingResponse(event_generator(), media_type="text/event-stream")
 
