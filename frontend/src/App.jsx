@@ -1,10 +1,10 @@
 import { Textarea } from "@/components/ui/textarea"
 import { Button } from "@/components/ui/button"
-import { streamContent } from "./lib/api"
+import { streamContent, extractFromURL } from "./lib/api"
 import { useState } from "react"
 import LogsTab from "./components/LogsTab"
 import ContentTab from "./components/ContentTab"
-import dummyLogTxt from "./lib/dummyLogs.txt?raw"
+import FactSheet from "./components/FactSheet"
 
 export default function App() {
 
@@ -15,9 +15,11 @@ export default function App() {
   const [review, setReview] = useState("")
   const [activeTab, setActiveTab] = useState("logs")
   const [currentStep, setCurrentStep] = useState("")
+  const [factSheet, setFactSheet] = useState("")
+  const [processedInput, setProcessedInput] = useState("")
 
 
-const handleGenerate = () => {
+const handleGenerate =async  () => {
   if (!input.trim()) return
 
   setLoading(true)
@@ -25,8 +27,16 @@ const handleGenerate = () => {
   setLogs([])
   setOutput("")
   setReview("")
+  
+  let finalInput = input
 
-  streamContent(input, {
+  if (input.startsWith("http")) {
+    const data = await extractFromURL(input)
+      finalInput = data.text
+    }
+    setProcessedInput(finalInput)
+
+  streamContent(finalInput, {
     onLog: (log) => {
       setLogs(prev => [...prev, log])
     },
@@ -49,6 +59,21 @@ const handleGenerate = () => {
       setLoading(false)
     }
   })
+}
+
+const handleFile = async (e) => {
+  const file = e.target.files[0]
+  if (!file) return
+  const text = await file.text()
+  setInput(text)
+}
+
+const handleDrop = async (e) => {
+  e.preventDefault()
+  const file = e.dataTransfer.files[0]
+  if (!file) return
+  const text = await file.text()
+  setInput(text)
 }
 
   return (
@@ -87,11 +112,32 @@ const handleGenerate = () => {
         {/* RIGHT SIDE CARD */}
         <div className="bg-white/70 backdrop-blur-xl border border-white/40 rounded-2xl p-6 shadow-xl space-y-5">
 
-          <div className="flex justify-between items-center">
-            <h3 className="font-semibold text-[#4b2e2e]">
-              Enter project details or URL
-            </h3>
-          </div>
+
+
+          <div
+  onDrop={handleDrop}
+  onDragOver={(e) => e.preventDefault()}
+  className="border-2 border-dashed border-[#f1d5d5] rounded-2xl p-6 text-center bg-white/60 backdrop-blur-sm hover:bg-white/80 transition"
+>
+  <p className="text-sm text-[#7a4b4b] mb-2">
+    Drag & drop a <span className="font-medium">.txt file</span>
+  </p>
+
+  <p className="text-xs text-[#a67c7c] mb-3">
+    or upload / paste a URL below
+  </p>
+
+  <label className="inline-block cursor-pointer px-4 py-2 text-sm rounded-lg 
+    bg-linear-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white">
+    Upload File
+    <input
+      type="file"
+      accept=".txt"
+      onChange={handleFile}
+      className="hidden"
+    />
+  </label>
+</div>
 
           <Textarea
               placeholder="Paste it here"
@@ -117,18 +163,20 @@ const handleGenerate = () => {
       {/* BELOW HERO SECTION */}
       <div className="mt-16 flex flex-col items-center relative z-10">
 
-        <div className="w-full mt-8 space-y-10">
+          <div className="w-full max-w-5xl space-y-10">
 
-          {/* LOGS */}
-          <LogsTab logs={logs} output={output} input={input} />
-         
+            <LogsTab logs={logs} />
+
+            {output && (
+              <>
+                <FactSheet factSheet={processedInput} />
+                <ContentTab output={output} input={processedInput} />
+              </>
+            )}
+
+          </div>
+
         </div>
-        <div className="w-full mt-8 space-y-10">
-         {output && (
-            <ContentTab output={output} input={input} />
-          )}</div>
-
-      </div>
     </div>
   )
 }

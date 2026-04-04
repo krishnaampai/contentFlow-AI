@@ -120,11 +120,10 @@ export default function ContentTab({ output: initialOutput, input }) {
   }
 
   return (
-    <div className="max-w-5xl mx-auto mt-10 space-y-8 px-6">
-
-      {/* MENU */}<div className="sticky top-2 z-50">
+    <div className="max-w-5xl mx-auto mt-10 px-6">
+      {/* MENU */}<div className="sticky top-0 z-50 ">
       <div className="max-w-5xl mx-auto flex justify-between items-center 
-  bg-white/60 backdrop-blur-sm rounded-xl px-4 py-2">
+  bg-white/60 backdrop-blur-sm  px-4 py-2 rounded-t-xl">
 
         <AnimatedTabs activeTab={activeTab} setActiveTab={setActiveTab} />
 
@@ -216,10 +215,10 @@ function Section({ id, title, content, accepted, onAccept, input, onCompare, onR
   const [view, setView] = useState("desktop")
   const [showCompare, setShowCompare] = useState(false)
   return (
-    <div id={id} className="bg-white/70 backdrop-blur-xl border rounded-xl p-5 space-y-4">
+    <div id={id} className="bg-white/60 backdrop-blur-xl p-5 space-y-4">
 
       {/* HEADER */}
-      <div className="sticky top-16 z-40 flex justify-between items-center bg-white/60 backdrop-blur-sm px-2 py-2 rounded-lg">
+      <div className="sticky top-14 z-40 flex justify-between items-center bg-white/60 backdrop-blur-sm px-2 py-2 rounded-lg">
         <h3 className="font-semibold text-[#4b2e2e]">{title}</h3>
 
         <div className="flex gap-2">

@@ -66,3 +66,13 @@ export const regenerateContent = (input, contentType, handlers) => {
 
   return eventSource
 }
+
+export const extractFromURL = async (url) => {
+  const res = await fetch(
+    `${API}/api/extract?url=${encodeURIComponent(url)}`
+  )
+
+  if (!res.ok) throw new Error("Extraction failed")
+
+  return res.json()
+}

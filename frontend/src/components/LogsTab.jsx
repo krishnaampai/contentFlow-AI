@@ -22,7 +22,7 @@ export default function LogsTab({ logs }) {
         ? logs.split("\n").map(l => l.trim())
         : []
 
-    let step = STEPS.RESEARCHING
+    let step = null
 
     for (let line of lines) {
       if (/Research started/i.test(line)) step = STEPS.RESEARCHING
@@ -42,7 +42,7 @@ export default function LogsTab({ logs }) {
   return (
     <div className="max-w-3xl mx-auto mt-10 space-y-6">
 
-      <div className="bg-white/70 backdrop-blur-xl border rounded-xl p-6 space-y-4">
+      <div className="bg-white/70 backdrop-blur-xl shadow-2xl rounded-xl p-6 space-y-4">
 
         <AgentRow
           name="Researcher"

@@ -1,13 +1,14 @@
 import sys
 import os
 import asyncio
+import requests
 sys.path.append(os.path.dirname(os.path.dirname(__file__)))
 
 from fastapi import FastAPI
 from utils.pipeline import run_pipeline, run_regen_threaded, flush_queue
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import StreamingResponse
-
+from bs4 import BeautifulSoup
 
 app = FastAPI()
 
@@ -23,6 +24,18 @@ app.add_middleware(
 def root():
     return {"status": "ok"}
 
+@app.get("/api/extract")
+def extract(url: str):
+    headers = {
+        "User-Agent": "Mozilla/5.0"
+    }
+
+    res = requests.get(url, headers=headers)
+    soup = BeautifulSoup(res.text, "html.parser")
+
+    text = soup.get_text(separator=" ", strip=True)
+
+    return {"text": text[:5000]}
 
 @app.get("/generate-stream")
 async def generate_stream_real(input: str):
