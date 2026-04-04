@@ -27,6 +27,7 @@ def root():
 @app.get("/generate-stream")
 async def generate_stream_real(input: str):
     async def event_generator():
+        yield "data: CONNECTED\n\n"  
 
         def log_callback(msg):
             yield_queue.append(msg)
@@ -68,11 +69,20 @@ async def generate_stream_real(input: str):
         finally:
             yield f"data: DONE\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+    event_generator(),
+    media_type="text/event-stream",
+    headers={
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Transfer-Encoding": "chunked",
+    },
+)
 
 @app.get("/regenerate-stream")
 async def regenerate_stream(content_type: str, input: str):
     async def event_generator():
+        yield "data: CONNECTED\n\n"  
         # clear old logs
         flush_queue()
 
@@ -113,7 +123,15 @@ async def regenerate_stream(content_type: str, input: str):
 
         yield f"data: DONE\n\n"
 
-    return StreamingResponse(event_generator(), media_type="text/event-stream")
+    return StreamingResponse(
+    event_generator(),
+    media_type="text/event-stream",
+    headers={
+        "Cache-Control": "no-cache",
+        "Connection": "keep-alive",
+        "Transfer-Encoding": "chunked",
+    },
+)
 
 #For testing - 
 # @app.get("/generate-stream")
