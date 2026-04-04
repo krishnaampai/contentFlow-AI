@@ -1,4 +1,4 @@
-import { useState } from "react"
+import { useState , useEffect} from "react"
 import JSZip from "jszip"
 import { Button } from "@/components/ui/button"
 import ReactMarkdown from "react-markdown"
@@ -8,60 +8,64 @@ import SocialPreview from "./SocialPreview"
 import EmailPreview from "./EmailPreview"
 import { regenerateContent } from "../lib/api"
 import AnimatedTabs from "./AnimatedTabs"
+import { useRef } from "react"
 
 export default function ContentTab({ output: initialOutput, input }) {
 
   const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState([])
   const [output, setOutput] = useState(initialOutput || "")
-  const [regenBuffer, setRegenBuffer] = useState("")
   const [activeTab, setActiveTab] = useState("blog")
+  const regenRef = useRef("")
 
+  useEffect(() => {
+  setOutput(initialOutput || "")
+},[initialOutput])
   const handleRegenerate = (type) => {
     setLoading(true)
-    setLogs("")
-    setRegenBuffer("")
+    setLogs([])
 
     regenerateContent(input, type, {
       onLog: (log) => {
         console.log("LOG:", log)
-        setLogs(prev => prev + (prev ? "\n" : "") + log)
+        setLogs(prev => [...prev, log])
       },
 
       onOutput: (out) => {
         console.log("OUTPUT:", out)
-        setRegenBuffer(prev => prev + "\n" + out)
+        regenRef.current += "\n" + out
       },
 
       onDone: () => {
+        const finalBuffer = regenRef.current
+        regenRef.current = ""
         setOutput(prev => {
-          if (!prev) return regenBuffer
+          if (!prev) return finalBuffer
 
           if (type === "blog") {
             return prev.replace(
-              /BLOG(?:\s+POST)?[:\n]+([\s\S]*?)(?=SOCIAL|EMAIL|$)/i,
-              `BLOG POST:\n${regenBuffer.trim()}\n`
+              /##\s*BLOG[\s\S]*?(?=##\s*SOCIAL|##\s*EMAIL|$)/i,
+              `## BLOG POST\n${finalBuffer.trim()}\n`
             )
           }
 
           if (type === "social") {
             return prev.replace(
-              /SOCIAL(?:\s+(?:THREAD|MEDIA))?[:\n]+([\s\S]*?)(?=BLOG|EMAIL|$)/i,
-              `SOCIAL THREAD:\n${regenBuffer.trim()}\n`
+              /##\s*SOCIAL[\s\S]*?(?=##\s*BLOG|##\s*EMAIL|$)/i,
+              `## SOCIAL THREAD\n${finalBuffer.trim()}\n`
             )
           }
 
           if (type === "email") {
             return prev.replace(
-              /EMAIL(?:\s+TEASER)?[:\n]+([\s\S]*?)(?=BLOG|SOCIAL|$)/i,
-              `EMAIL TEASER:\n${regenBuffer.trim()}\n`
+              /##\s*EMAIL[\s\S]*?(?=##\s*BLOG|##\s*SOCIAL|$)/i,
+              `## EMAIL TEASER\n${finalBuffer.trim()}\n`
             )
           }
 
           return prev
         })
 
-        setRegenBuffer("")
         setLoading(false)
       },
 
@@ -86,13 +90,13 @@ export default function ContentTab({ output: initialOutput, input }) {
       email: "",
     }
 
-    const blogMatch = text.match(/BLOG(?:\s+POST)?[:\n]+([\s\S]*?)(?=SOCIAL|EMAIL|$)/i)
-    const socialMatch = text.match(/SOCIAL(?:\s+(?:THREAD|MEDIA))?[:\n]+([\s\S]*?)(?=BLOG|EMAIL|$)/i)
-    const emailMatch = text.match(/EMAIL(?:\s+TEASER)?[:\n]+([\s\S]*?)(?=BLOG|SOCIAL|$)/i)
+    const blogMatch = text.match(/##\s*BLOG[\s\S]*?(?=##\s*SOCIAL|##\s*EMAIL|$)/i)
+    const socialMatch = text.match(/##\s*SOCIAL[\s\S]*?(?=##\s*BLOG|##\s*EMAIL|$)/i)
+    const emailMatch = text.match(/##\s*EMAIL[\s\S]*?(?=##\s*BLOG|##\s*SOCIAL|$)/i)
 
-    sections.blog = blogMatch?.[1]?.trim() || ""
-    sections.social = socialMatch?.[1]?.trim() || ""
-    sections.email = emailMatch?.[1]?.trim() || ""
+    sections.blog = blogMatch?.[0]?.trim() || ""
+    sections.social = socialMatch?.[0]?.trim() || ""
+    sections.email = emailMatch?.[0]?.trim() || ""
 
     return sections
   }

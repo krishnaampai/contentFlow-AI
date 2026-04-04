@@ -22,18 +22,18 @@ const handleGenerate = () => {
 
   setLoading(true)
   setActiveTab("logs")
-  setLogs("")
+  setLogs([])
   setOutput("")
   setReview("")
 
   streamContent(input, {
     onLog: (log) => {
-      setLogs(prev => prev + (prev ? "\n" : "") + log)
+      setLogs(prev => [...prev, log])
     },
 
     onOutput: (out) => {
       console.log(out)
-      setOutput(prev => prev + "\n" + out)
+      setOutput(prev => prev + out + "\n")
       
     },
 
