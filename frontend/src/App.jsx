@@ -169,7 +169,7 @@ const handleDrop = async (e) => {
 
             {output && (
               <>
-                <FactSheet factSheet={processedInput} />
+                {/* <FactSheet factSheet={processedInput} /> */}
                 <ContentTab output={output} input={processedInput} />
               </>
             )}

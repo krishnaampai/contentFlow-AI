@@ -12,17 +12,21 @@ import { useRef } from "react"
 
 export default function ContentTab({ output: initialOutput, input }) {
 
-  const [loading, setLoading] = useState(false)
   const [logs, setLogs] = useState([])
   const [output, setOutput] = useState(initialOutput || "")
   const [activeTab, setActiveTab] = useState("blog")
+  const [regenerating, setRegenerating] = useState({
+    blog: false,
+    social: false,
+    email: false,
+  })
   const regenRef = useRef("")
 
   useEffect(() => {
   setOutput(initialOutput || "")
 },[initialOutput])
   const handleRegenerate = (type) => {
-    setLoading(true)
+    setRegenerating(prev => ({ ...prev, [type]: true }))
     setLogs([])
 
     regenerateContent(input, type, {
@@ -32,9 +36,35 @@ export default function ContentTab({ output: initialOutput, input }) {
       },
 
       onOutput: (out) => {
-        console.log("OUTPUT:", out)
-        regenRef.current += "\n" + out
-      },
+  regenRef.current += "\n" + out
+
+  setOutput(prev => {
+    const live = regenRef.current
+
+    if (type === "blog") {
+      return prev.replace(
+        /##\s*BLOG[\s\S]*?(?=##\s*SOCIAL|##\s*EMAIL|$)/i,
+        `## BLOG POST\n${live}`
+      )
+    }
+
+    if (type === "social") {
+      return prev.replace(
+        /##\s*SOCIAL[\s\S]*?(?=##\s*BLOG|##\s*EMAIL|$)/i,
+        `## SOCIAL THREAD\n${live}`
+      )
+    }
+
+    if (type === "email") {
+      return prev.replace(
+        /##\s*EMAIL[\s\S]*?(?=##\s*BLOG|##\s*SOCIAL|$)/i,
+        `## EMAIL TEASER\n${live}`
+      )
+    }
+
+    return prev
+  })
+},
 
       onDone: () => {
         const finalBuffer = regenRef.current
@@ -66,11 +96,11 @@ export default function ContentTab({ output: initialOutput, input }) {
           return prev
         })
 
-        setLoading(false)
+        setRegenerating(prev => ({ ...prev, [type]: false }))
       },
 
       onError: () => {
-        setLoading(false)
+        setRegenerating(prev => ({ ...prev, [type]: false }))
       }
     })
   }
@@ -146,6 +176,7 @@ export default function ContentTab({ output: initialOutput, input }) {
         input={input}
         onCompare={() => setCompareData({ input, content: blog })}
         onRegenerate={() => handleRegenerate("blog")}
+        isRegenerating={regenerating.blog}
       />
 
       <Section
@@ -157,6 +188,7 @@ export default function ContentTab({ output: initialOutput, input }) {
         input={input}
         onCompare={() => setCompareData({ input, content: social })}
         onRegenerate={() => handleRegenerate("social")}
+        isRegenerating={regenerating.social}
       />
       <Section
         id="email"
@@ -167,12 +199,13 @@ export default function ContentTab({ output: initialOutput, input }) {
         input={input}
         onCompare={() => setCompareData({ input, content: email })}
         onRegenerate={() => handleRegenerate("email")}
+        isRegenerating={regenerating.email}
       />
 
       
 
       {compareData && (
-        <div className="fixed inset-0 z-[9999] flex items-center justify-center">
+        <div className="fixed inset-0 z-9999 flex items-center justify-center">
 
           <div
             className="absolute inset-0 bg-black/40 backdrop-blur-md"
@@ -211,9 +244,8 @@ export default function ContentTab({ output: initialOutput, input }) {
   )
 }
 
-function Section({ id, title, content, accepted, onAccept, input, onCompare, onRegenerate }) {
+function Section({ id, title, content, accepted, onAccept, input, onCompare, onRegenerate, isRegenerating }) {
   const [view, setView] = useState("desktop")
-  const [showCompare, setShowCompare] = useState(false)
   return (
     <div id={id} className="bg-white/60 backdrop-blur-xl p-5 space-y-4">
 
@@ -236,9 +268,10 @@ function Section({ id, title, content, accepted, onAccept, input, onCompare, onR
 
           <Button
             onClick={onRegenerate}
+            disabled={isRegenerating}
             className="bg-linear-to-r from-[#7f1d1d] via-[#dc2626] to-[#ea580c] text-white"
           >
-            Regenerate
+            {isRegenerating ? "Regenerating..." : "Regenerate"}
           </Button>
 
           <Button
