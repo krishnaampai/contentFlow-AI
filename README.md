@@ -14,26 +14,26 @@ ContentFlow AI is a multi-agent content generation system that automates the ent
 
 ---
 
-##  Tech Stack
+## Tech Stack
 
 **Programming Languages**
 
-* Python
-* JavaScript
+* Python  
+* JavaScript  
 
 **Frameworks & Libraries**
 
-* FastAPI (backend API)
-* React + Vite (frontend)
-* Tailwind CSS (styling)
-* CrewAI (multi-agent orchestration)
+* FastAPI (backend API)  
+* CrewAI (multi-agent orchestration)  
+* React + Vite (frontend)  
+* Tailwind CSS (styling)  
+* BeautifulSoup4 (web scraping)  
 
-**Tools & APIs**
+**APIs & Third-party Tools**
 
-* Gemini API (LLM)
-* JSZip (export functionality)
-
----
+* Gemini API (LLM)  
+* SSE-Starlette (real-time streaming)  
+* JSZip (export functionality)  
 
 ##  Setup Instructions
 
@@ -74,20 +74,20 @@ GEMINI_API_KEY=your_gemini_api_key_here
 
 👉 Replace with your actual Gemini API key.
 
-Frontend (.env)
+### Frontend (.env)
 
 Create a .env file inside the frontend folder:
 
 ```env
-VITE_API_URL=your_vite_url
+VITE_API_URL = http://localhost:8000
 ```
 
 ---
 
-### 4️⃣ Run Backend Server
+### 4️⃣ Run Backend Server from root
 
 ```bash
-uvicorn main:app --reload
+uvicorn backend.main:app --reload
 ```
 
 Server will run on:
@@ -123,11 +123,11 @@ http://localhost:5173
 
 ##  How to Use
 
-1. Enter project details or content input
+1. Upload txt file or it's URL or directly use type project details
 2. Click **Generate Content**
 3. View:
 
-   * Agent Logs
+   * Agent Logs (Researching, writing, editing)
    * Generated Content (Blog, Social, Email)
    * Compare section (side-by-side comparison)
 4. Accept, regenerate, or export content
@@ -136,16 +136,22 @@ http://localhost:5173
 
 ##  Key Features
 
-* Multi-agent pipeline (**Researcher → Writer → Editor**)
+* Multi-agent pipeline (**Researcher → Writer → Editor**) 
+* Researcher generates a shared factsheet used across all content formats for consistency
+* Editor can send content back to the Writer based on feedback (controlled by max_retries)
 * Generates blog, social thread, and email simultaneously
 * Accept / Undo and Regenerate per section
 * Side-by-side review comparison
 * Export content as ZIP
 * Live streaming agent logs
+* File & URL input support
 
 ---
 
 ##  Future Improvements
 
-* File & URL input support
+* Add user authentication and content history
+* Improve UI with real-time typing animations
+* Add comment-based regeneration for more precise edits
+* Add an option to customize and apply a company’s tone across content
 
